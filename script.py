@@ -1,4 +1,12 @@
+from copy import deepcopy
+from time import sleep
+from typing import List
+import itertools
 import pygame
+
+from ANSI_COLORS import CLEAR_SCREEN, AnsiColor, goto
+
+Grid = List[List[int]]
 
 
 class myApp:
@@ -94,71 +102,111 @@ class myApp:
             if elim:
                 del self.solutions[i]
 
+easy_sudoku_grid = [
+        [7, 6, 0, 0, 0, 0, 0, 9, 5],
+        [1, 0, 0, 8, 0, 9, 0, 0, 6],
+        [0, 0, 0, 5, 0, 4, 0, 0, 0],
+        [0, 3, 9, 4, 0, 7, 6, 5, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 5, 4, 1, 0, 8, 2, 7, 0],
+        [0, 0, 0, 7, 0, 6, 0, 0, 0],
+        [3, 0, 0, 2, 0, 5, 0, 0, 4],
+        [5, 7, 0, 0, 0, 0, 0, 3, 2],
+        ]
 
-grid = [
-    [1,0,0,0,0,0,0,0,0],
-    [0,2,0,0,0,0,0,0,0],
-    [0,0,3,0,0,0,0,0,0],
-    [0,0,0,4,0,0,0,0,0],
-    [0,0,0,0,5,0,0,0,0],
-    [0,0,0,0,0,6,0,0,0],
-    [0,0,0,0,0,0,7,0,0],
-    [0,0,0,0,0,0,0,8,0],
-    [0,0,0,0,0,0,0,0,9],
-]
-
-grid = [
-    [7,8,0,4,0,0,1,2,0],
-    [6,0,0,0,7,5,0,0,9],
-    [0,0,0,6,0,1,0,7,8],
-    [0,0,7,0,4,0,2,6,0],
-    [0,0,1,0,5,0,9,3,0],
-    [9,0,4,0,6,0,0,0,5],
-    [0,7,0,3,0,0,0,1,2],
-    [1,2,0,0,0,7,4,0,0],
-    [0,4,9,2,0,6,0,0,7]
-]
-
-def possible(grid, i1,j1,n):
+def possible(grid: Grid, row: int, col: int, n: int) -> bool:
     for i in range(9):
-        if grid[i1][i] == n:
+        if grid[row][i] == n:
             return False
     for i in range(9):
-        if grid[i][j1] == n:
+        if grid[i][col] == n:
             return False
 
-    i_0 = (i1//3)*3
-    j_0 = (j1//3)*3
-    for i in range(3):
-        for j in range(3):
-            if grid[i_0+i][j_0+j] == n:
-                return False
+    i_0 = (row // 3) * 3
+    j_0 = (col // 3) * 3
+    for i, j in itertools.product(range(3), range(3)):
+        if grid[i_0 + i][j_0 + j] == n:
+            return False
 
     return True
 
-def solve(grid):
-    solutions = []
+def solve(
+        grid: Grid,
+        *,
+        enable_print: bool = False,
+        interval: float = .3
+        ) -> list[Grid]:
+
+    solutions: list[Grid] = []
+
+    if enable_print:
+        print(CLEAR_SCREEN, end='')
+
+    def inner_solve(grid: Grid) -> None:
+        for i, j in itertools.product(range(9), repeat=2):
+            if grid[i][j] != 0:
+                continue
+            for n in range(1, 10):
+                if not possible(grid, i, j, n):
+                    continue
+                grid[i][j] = n
+                if enable_print:
+                    print(goto(1, 1), end='')
+                    pretty_print_sudoku(
+                            grid,
+                            enable_highlighting=True,
+                            highlight_row=i,
+                            highlight_col=j,
+                            highlight_color=AnsiColor.GREEN
+                            )
+                    sleep(interval)
+                inner_solve(grid)
+                if enable_print:
+                    print(goto(1, 1), end='')
+                    pretty_print_sudoku(
+                            grid,
+                            enable_highlighting=True,
+                            highlight_row=i,
+                            highlight_col=j,
+                            highlight_color=AnsiColor.RED
+                            )
+                    sleep(interval)
+                grid[i][j] = 0
+            return
+        solutions.append(deepcopy(grid))
+    inner_solve(grid)
+    return solutions
+
+def pretty_print_sudoku(
+        grid: Grid,
+        *,
+        enable_highlighting: bool = False,
+        highlight_row: int | None = None,
+        highlight_col: int | None = None,
+        highlight_color: AnsiColor = AnsiColor.RESET
+        ):
+    horizontal_line = "+-------+-------+-------+"
+
+    print(horizontal_line)
     for i in range(9):
+        if i % 3 == 0 and i != 0:
+            print(horizontal_line)
         for j in range(9):
+            if j % 3 == 0:
+                print("|", end=" ")
             if grid[i][j] == 0:
-                for n in range(1,10):
-                    if possible(grid, i, j, n):
-                        grid[i][j] = n
-                        solve(grid)
-                        grid[i][j] = 0
-                return
-    solutions.append(grid)
-    print(grid)
+                print(" ", end=" ")
+            else:
+                if enable_highlighting and i == highlight_row and j == highlight_col:
+                    print(f'{highlight_color.value}{grid[i][j]}{AnsiColor.RESET.value}', end=" ")
+                else:
+                    print(grid[i][j], end=" ")
+            if j == 8:
+                print("|")
+    print(horizontal_line)
 
+solutions = solve(easy_sudoku_grid, enable_print=True, interval=0.01)
 
-
-solve(grid)
-
-app = myApp('Sudoku',500,500,grid)
-
-while app.is_running:
-    app.update()
-
-
-
-pygame.quit()
+print(CLEAR_SCREEN, end='')
+for solution in solutions:
+    pretty_print_sudoku(solution)

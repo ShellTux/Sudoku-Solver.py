@@ -2,6 +2,14 @@
 
 Sudoku Solver in Python.
 
+## Usage
+
+```sh
+make run
+```
+
+![Sudoku Solver CLI](sudoku.gif)
+
 ## Contributing
 
 If you would like to contribute to the project, feel free to fork the repository

@@ -1,7 +1,7 @@
 import pygame
 
 
-class myApp():
+class myApp:
     def __init__(self, title, width, height, grid):
         pygame.init()
         pygame.font.init()
@@ -22,7 +22,7 @@ class myApp():
     def show(self):
         self.canvas.fill((0,0,0))
         width, height = self.screen.get_surface().get_size()
-        
+
         #Draw lines
         for i in range(self.rows):
             pygame.draw.line(self.canvas, (255,255,255), (0,i*self.dy),(width,i*self.dy),1 + 6 * (i%3==0))
@@ -42,23 +42,23 @@ class myApp():
                     text = str(self.grid[i][j])
                 text_surface = self.font.render(text, True, (255,255,255))
                 self.canvas.blit(text_surface,(x,y))
-                
+
         self.screen.update()
 
-        
+
     def update(self):
         for event in pygame.event.get():
-            
+
             if event.type == pygame.KEYDOWN:
                 if event.key == 13:
                     self.solve()
-            
-            
+
+
             if event.type == pygame.QUIT:
                 self.is_running = False
 
         self.show()
-        
+
     def solve(self):
         grid = self.grid.copy()
         for i in range(9):
@@ -81,14 +81,14 @@ class myApp():
                             pygame.draw.rect(self.canvas,color,(j*self.dx,i*self.dy,self.dx,self.dy))
                             pygame.time.delay(self.delay)
                     return
-        
+
         self.solutions.append(grid)
         pygame.time.delay(1000)
         self.show()
         print(grid)
         for i in range(len(self.solutions)):
+            elim = False
             for row in self.solutions[i]:
-                elim = False
                 if sum(row) != sum([1,2,3,4,5,6,7,8,9]):
                     elim = True
             if elim:
@@ -126,14 +126,14 @@ def possible(grid, i1,j1,n):
     for i in range(9):
         if grid[i][j1] == n:
             return False
-        
+
     i_0 = (i1//3)*3
     j_0 = (j1//3)*3
     for i in range(3):
         for j in range(3):
             if grid[i_0+i][j_0+j] == n:
                 return False
-    
+
     return True
 
 def solve(grid):
@@ -149,15 +149,15 @@ def solve(grid):
                 return
     solutions.append(grid)
     print(grid)
-    
+
 
 
 solve(grid)
 
-myApp = myApp('Sudoku',500,500,grid)
+app = myApp('Sudoku',500,500,grid)
 
-while myApp.is_running:
-    myApp.update()
+while app.is_running:
+    app.update()
 
 
 

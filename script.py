@@ -205,7 +205,7 @@ def pretty_print_sudoku(
                 print("|")
     print(horizontal_line)
 
-solutions = solve(easy_sudoku_grid, enable_print=True, interval=0.01)
+solutions = solve(easy_sudoku_grid, enable_print=True, interval=0.03)
 
 print(CLEAR_SCREEN, end='')
 for solution in solutions:
